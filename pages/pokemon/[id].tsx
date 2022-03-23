@@ -11,8 +11,10 @@ interface Props {
   pokemon: Pokemon
 }
 
-const PokemonPage: NextPage<Props> = ({pokemon}) => {
-  const [isInFavorites, setIsInFavorites] = useState(localFavorites.existInFavorites(pokemon.id))
+const PokemonPage: NextPage<Props> = ({ pokemon }) => {
+  const [isInFavorites, setIsInFavorites] = useState(
+    localFavorites.existInFavorites(pokemon.id)
+  )
 
   const onToggleFavorite = () => {
     localFavorites.toggleFavorite(pokemon.id)
@@ -21,12 +23,15 @@ const PokemonPage: NextPage<Props> = ({pokemon}) => {
 
   return (
     <Layout title={pokemon.name[0].toUpperCase() + pokemon.name.slice(1)}>
-      <Grid.Container css={{marginTop: '5px'}} gap={2}>
+      <Grid.Container css={{ marginTop: '5px' }} gap={2}>
         <Grid xs={12} sm={4}>
-          <Card hoverable css={{padding: '30px'}}>
+          <Card hoverable css={{ padding: '30px' }}>
             <Card.Body>
               <Card.Image
-                src={pokemon.sprites.other?.dream_world.front_default || '/no-image.ong'}
+                src={
+                  pokemon.sprites.other?.dream_world.front_default ||
+                  '/no-image.ong'
+                }
                 alt={pokemon.name}
                 width='100%'
                 height={200}
@@ -36,8 +41,12 @@ const PokemonPage: NextPage<Props> = ({pokemon}) => {
         </Grid>
         <Grid xs={12} sm={8}>
           <Card>
-            <Card.Header css={{display: 'flex', justifyContent: 'space-between'}}>
-              <Text h1 transform='capitalize'>{pokemon.name}</Text>
+            <Card.Header
+              css={{ display: 'flex', justifyContent: 'space-between' }}
+            >
+              <Text h1 transform='capitalize'>
+                {pokemon.name}
+              </Text>
               <Button
                 color='gradient'
                 ghost={!isInFavorites}
@@ -82,24 +91,30 @@ const PokemonPage: NextPage<Props> = ({pokemon}) => {
   )
 }
 
-export const getStaticPaths: GetStaticPaths = async (ctx) => {
-  const pokemon151: string[] = [...Array(151)].map((value, index) => `${index + 1}`)
+export const getStaticPaths: GetStaticPaths = async ctx => {
+  const pokemon151: string[] = [...Array(151)].map(
+    (value, index) => `${index + 1}`
+  )
 
   return {
     paths: pokemon151.map(id => ({
-      params: {id}
+      params: { id }
     })),
-    fallback: false
+    fallback: 'blocking'
   }
 }
 
-export const getStaticProps: GetStaticProps = async ({params}) => {
-  const {id} = params as {id: string}
+export const getStaticProps: GetStaticProps = async ({ params }) => {
+  const { id } = params as { id: string }
+
+  const pokemon = await getPokemonInfo(id)
+  if (!pokemon) return { redirect: { destination: '/', permanent: false } }
 
   return {
     props: {
-      pokemon: await getPokemonInfo(id)
-    }
+      pokemon
+    },
+    revalidate: 86400
   }
 }
 
